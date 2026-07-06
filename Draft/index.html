@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC26 Professional Draft Matrix</title>
+    <style>
+        :root {
+            --bg-dark: #05060a;
+            --panel-bg: rgba(10, 14, 24, 0.85);
+            --neon-blue: #00f0ff;
+            --neon-gold: #ffb700;
+            --neon-magenta: #ff0055;
+            --text-light: #f1f2f6;
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: var(--font-family); overflow-x: hidden; height: 100vh; }
+
+        #app { display: flex; flex-direction: column; min-height: 100vh; position: relative; }
+        .screen { display: none; flex-direction: column; width: 100%; padding: 20px; animation: fadeIn 0.25s ease-out forwards; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .glass-panel { background: var(--panel-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7); }
+        
+        .neon-btn { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--neon-blue); color: #fff; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+        .neon-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 12px var(--neon-blue); }
+        .neon-btn.gold { border-color: var(--neon-gold); }
+        .neon-btn.gold:hover { background: var(--neon-gold); color: #000; box-shadow: 0 0 12px var(--neon-gold); }
+        .neon-btn.danger { border-color: var(--neon-magenta); color: var(--neon-magenta); }
+        .neon-btn.danger:hover { background: var(--neon-magenta); color: #fff; }
+
+        .menu-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; gap: 30px; }
+        .game-title { font-size: 3.5rem; font-weight: 900; font-style: italic; background: linear-gradient(135deg, #fff, var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        .menu-buttons { display: flex; flex-direction: column; gap: 12px; width: 320px; }
+        .back-btn { margin-bottom: 20px; align-self: flex-start; }
+
+        .draft-layout { display: grid; grid-template-columns: 2.8fr 1.2fr; gap: 20px; }
+        .pitch-container { position: relative; background: linear-gradient(180deg, #0b1a14 0%, #050b09 100%); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; display: flex; flex-direction: column; justify-content: space-around; padding: 20px; min-height: 580px; }
+        .pitch-row { display: flex; justify-content: center; gap: 25px; width: 100%; }
+
+        .fc-card { width: 95px; height: 135px; position: relative; background: linear-gradient(135deg, #1c2331, #0d121a); border-radius: 6px; border: 1.5px solid #34445c; display: flex; flex-direction: column; padding: 5px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.6); cursor: pointer; transition: transform 0.2s; }
+        .fc-card:hover { transform: translateY(-3px); border-color: var(--neon-blue); }
+        .fc-card.gold-rare { background: linear-gradient(135deg, #f0ca41, #a37c10); border-color: #ffe682; color: #111; }
+        .fc-card.vip-promo { background: linear-gradient(135deg, #00f0ff, #ff0055); border-color: #fff; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
+        .fc-card.selected-active { border: 2px dashed var(--neon-gold) !important; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { box-shadow: 0 0 2px var(--neon-gold); } to { box-shadow: 0 0 12px var(--neon-gold); } }
+
+        .card-top { display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; line-height: 1; }
+        .card-meta { display: flex; flex-direction: column; align-items: center; }
+        .card-pos { font-size: 8px; opacity: 0.8; margin-top: 1px; }
+        .card-info { margin-top: auto; text-align: center; z-index: 2; }
+        .card-name { font-size: 9px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+        .card-stats-row { display: flex; justify-content: center; gap: 3px; font-size: 7px; margin-top: 2px; opacity: 0.9; font-weight: bold; }
+        .card-actions { position: absolute; top: -8px; right: -8px; display: none; z-index: 10; }
+        .fc-card:hover .card-actions { display: block; }
+        .action-trash { background: var(--neon-magenta); border: none; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; font-weight: bold; }
+
+        .dashboard-panel { display: flex; flex-direction: column; gap: 14px; }
+        .stat-box { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
+        .stat-box span:last-child { font-weight: 700; color: var(--neon-blue); }
+
+        .bench-section { margin-top: 25px; }
+        .bench-title { font-size: 16px; text-transform: uppercase; margin-bottom: 10px; color: var(--neon-gold); letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .bench-grid { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; background: rgba(0,0,0,0.3); border-radius: 8px; min-height: 160px; border: 1px dashed rgba(255,255,255,0.05); }
+
+        .packs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 800px; margin: 0 auto; width: 100%; }
+        .pack-card { display: flex; flex-direction: column; align-items: center; padding: 30px; text-align: center; }
+        .pack-art { width: 130px; height: 180px; background: linear-gradient(135deg, #1b222e, #090c12); border-radius: 8px; border: 2px solid var(--neon-blue); margin: 15px 0; }
+        .pack-art.gold-theme { border-color: var(--neon-gold); }
+        .pack-timer { font-size: 20px; font-weight: 700; color: var(--neon-blue); margin-bottom: 15px; }
+        
+        .modern-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; color: white; text-align: center; font-weight: 600; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3, 4, 7, 0.95); backdrop-filter: blur(15px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-content { width: 90%; max-width: 400px; }
+
+        .showcase-card-wrapper { perspective: 1000px; width: 180px; height: 260px; }
+        .showcase-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .showcase-card.flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .card-face.front { background: #070a0f; transform: rotateY(180deg); padding: 10px; border: 1.5px solid rgba(255,255,255,0.1); }
+        .card-face.back { background: linear-gradient(135deg, #111722, #1f293a); border: 2px solid var(--neon-blue); font-size: 2.5rem; font-weight: 900; color: var(--neon-blue); }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- ANA MENÜ -->
+        <div id="screen-menu" class="screen active">
+            <div class="menu-container">
+                <h1 class="game-title">FC26 MATRIX DRAFT</h1>
+                <div class="menu-buttons">
+                    <button class="neon-btn" onclick="app.navigateTo('screen-draft')">Sahayı Görüntüle / Kadro</button>
+                    <button class="neon-btn" onclick="app.navigateTo('screen-packs')">Paket Açılım Simülatörü</button>
+                    <button class="neon-btn danger" onclick="app.clearStorage()">Tüm Verileri Sıfırla</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAHA & MANAGEMENT -->
+        <div id="screen-draft" class="screen">
+            <button class="neon-btn back-btn" onclick="app.navigateTo('screen-menu')">Ana Menü</button>
+            
+            <div class="draft-layout">
+                <div class="pitch-container">
+                    <div class="pitch-row" id="row-attack"></div>
+                    <div class="pitch-row" id="row-midfield"></div>
+                    <div class="pitch-row" id="row-defense"></div>
+                    <div class="pitch-row" id="row-gk"></div>
+                </div>
+                
+                <div class="dashboard-panel glass-panel">
+                    <h3>TAKIM MATRİSİ</h3>
+                    <hr style="border-color:rgba(255,255,255,0.05)">
+                    <div class="stat-box"><span>Takım Geneli (OVR)</span><span id="stat-ovr" style="font-size:24px; color:var(--neon-gold)">0</span></div>
+                    <div class="stat-box"><span>Hücum Gücü</span><span id="stat-att">0</span></div>
+                    <div class="stat-box"><span>Merkez Hat</span><span id="stat-mid">0</span></div>
+                    <div class="stat-box"><span>Defans Hattı</span><span id="stat-def">0</span></div>
+                    <p style="font-size:11px; color:#788296; line-height:1.4;">* Değiştirmek istediğiniz saha slotuna tıklayın, ardından aşağıdan <b>aynı pozisyondaki</b> yedek oyuncuya tıklayarak takas edin.</p>
+                </div>
+            </div>
+
+            <!-- YEDEK KULÜBESİ / HAVUZ -->
+            <div class="bench-section glass-panel">
+                <div class="bench-title">
+                    <span>Yedek Kulübesi & Havuz (<span id="bench-count">0</span> Oyuncu)</span>
+                </div>
+                <div class="bench-grid" id="bench-container"></div>
+            </div>
+        </div>
+
+        <!-- PAKETLER -->
+        <div id="screen-packs" class="screen">
+            <button class="neon-btn back-btn" onclick="app.navigateTo('screen-menu')">Ana Menü</button>
+            <div class="packs-container">
+                <div class="pack-card glass-panel">
+                    <h2>STANDART PAKET</h2>
+                    <p style="color:#788296; font-size:12px; margin-top:4px;">%60 (70-77) | %30 (80-85) | %10 (90-99)</p>
+                    <div class="pack-art gold-theme"></div>
+                    <div class="pack-timer" id="pack-timer">HAZIR</div>
+                    <button class="neon-btn" id="btn-open" onclick="app.openNormalPack()">Paketi Satın Al</button>
+                </div>
+
+                <div class="pack-card glass-panel">
+                    <h2>VIP GELİŞTİRİCİ GİRİŞİ</h2>
+                    <p style="color:#788296; font-size:12px; margin-top:4px;">F4 Kod Paneli Yönetimi</p>
+                    <div class="pack-art" style="border-color:var(--neon-magenta)"></div>
+                    <button class="neon-btn gold" onclick="app.openModal('modal-f4-login')">Terminali Aç (F4)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALLAR -->
+    <div id="modal-f4-login" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h3 style="text-align:center; margin-bottom:15px; color:var(--neon-blue);">DEVELOPER VERIFICATION</h3>
+            <input type="password" id="f4-pass" class="modern-input" placeholder="Geliştirici Şifresi">
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:15px;">
+                <button class="neon-btn" onclick="app.closeModal('modal-f4-login')">İptal</button>
+                <button class="neon-btn gold" onclick="app.verifyPassword()">Giriş</button>
+            </div>
+            <p id="f4-err" style="color:var(--neon-magenta); text-align:center; font-size:12px; margin-top:10px;"></p>
+        </div>
+    </div>
+
+    <div id="modal-f4-panel" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h3>Terminal Matrix v26</h3>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                <button class="neon-btn" onclick="app.devResetCooldown()">Paket Süresini Sıfırla</button>
+                <button class="neon-btn gold" onclick="app.devAddElitePlayer()">Havuza Elit Rastgele Oyuncu Ekle (90+)</button>
+                <button class="neon-btn" onclick="app.closeModal('modal-f4-panel')">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-pack-opening" class="modal-overlay">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <div class="showcase-card-wrapper" onclick="app.flipCard()">
+                <div class="showcase-card" id="showcase-card-inner">
+                    <div class="card-face back">FC26</div>
+                    <div class="card-face front" id="showcase-front"></div>
+                </div>
+            </div>
+            <button class="neon-btn gold" id="btn-collect" style="margin-top:25px; display:none;" onclick="app.collectPackToBench()">Yedek Kulübesine Gönder</button>
+        </div>
+    </div>
+
+    <script src="oyuncular.js"></script>
+    <script>
+        class FC26Engine {
+            constructor() {
+                this.storageKey = 'fc26_matrix_v2';
+                this.state = {
+                    squad: { ST: null, LW: null, RW: null, CAM: null, CM: null, CDM: null, LB: null, CB1: null, CB2: null, RB: null, GK: null },
+                    bench: [],
+                    nextPackTime: 0
+                };
+                this.selectedPitchPos = null;
+                this.activePackPlayer = null;
+                this.init();
+            }
+
+            init() {
+                this.load();
+                this.verifyAndBuildInitialSquad();
+                this.renderAll();
+                
+                window.addEventListener('keydown', (e) => { if (e.key === 'F4') { e.preventDefault(); this.openModal('modal-f4-login'); } });
+                setInterval(() => this.updateTimer(), 1000);
+            }
+
+            load() {
+                const saved = localStorage.getItem(this.storageKey);
+                if (saved) { try { this.state = JSON.parse(saved); } catch(e) {} }
+            }
+
+            save() { localStorage.setItem(this.storageKey, JSON.stringify(this.state)); }
+            clearStorage() { localStorage.removeItem(this.storageKey); window.location.reload(); }
+
+            verifyAndBuildInitialSquad() {
+                const isSquadEmpty = Object.values(this.state.squad).every(x => x === null);
+                if (!isSquadEmpty) return;
+
+                let safePool = RAW_FC26_DATABASE.filter(p => p.rating <= 80);
+                const positionsToFill = [
+                    { key: "ST", pos: "ST" }, { key: "LW", pos: "LW" }, { key: "RW", pos: "RW" },
+                    { key: "CAM", pos: "CAM" }, { key: "CM", pos: "CM" }, { key: "CDM", pos: "CDM" },
+                    { key: "LB", pos: "LB" }, { key: "CB1", pos: "CB" }, { key: "CB2", pos: "CB" },
+                    { key: "RB", pos: "RB" }, { key: "GK", pos: "GK" }
+                ];
+
+                let usedIds = new Set();
+                positionsToFill.forEach(item => {
+                    let match = safePool.filter(p => p.pos === item.pos && !usedIds.has(p.id));
+                    if(match.length === 0) match = safePool.filter(p => !usedIds.has(p.id));
+                    
+                    const selected = match[Math.floor(Math.random() * match.length)];
+                    this.state.squad[item.key] = selected;
+                    usedIds.add(selected.id);
+                });
+
+                let benchCandidates = safePool.filter(p => !usedIds.has(p.id));
+                for(let i=0; i<8; i++) {
+                    if(benchCandidates[i]) this.state.bench.push(benchCandidates[i]);
+                }
+                this.save();
+            }
+
+            navigateTo(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                this.renderAll();
+            }
+
+            renderAll() {
+                this.renderPitch();
+                this.renderBench();
+                this.calculateMetrics();
+            }
+
+            renderPitch() {
+                const layout = {
+                    "row-attack": [{k:"LW", p:"LW"}, {k:"ST", p:"ST"}, {k:"RW", p:"RW"}],
+                    "row-midfield": [{k:"CAM", p:"CAM"}, {k:"CM", p:"CM"}, {k:"CDM", p:"CDM"}],
+                    "row-defense": [{k:"LB", p:"LB"}, {k:"CB1", p:"CB"}, {k:"CB2", p:"CB"}, {k:"RB", p:"RB"}],
+                    "row-gk": [{k:"GK", p:"GK"}]
+                };
+
+                Object.keys(layout).forEach(rowId => {
+                    const el = document.getElementById(rowId);
+                    el.innerHTML = "";
+                    layout[rowId].forEach(slot => {
+                        const player = this.state.squad[slot.k];
+                        const activeClass = this.selectedPitchPos === slot.k ? 'selected-active' : '';
+                        
+                        if(player) {
+                            el.insertAdjacentHTML('beforeend', `
+                                <div class="fc-card ${player.rarity} ${activeClass}" onclick="app.selectPitchSlot('${slot.k}')">
+                                    <div class="card-top">
+                                        <div class="card-meta"><span>${player.rating}</span><span class="card-pos">${player.pos}</span></div>
+                                    </div>
+                                    <div class="card-info">
+                                        <div class="card-name">${player.name}</div>
+                                        <div class="card-stats-row"><span>${player.pac} PAC</span><span>${player.sho} SHO</span></div>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    });
+                });
+            }
+
+            renderBench() {
+                const container = document.getElementById('bench-container');
+                container.innerHTML = "";
+                document.getElementById('bench-count').innerText = this.state.bench.length;
+
+                this.state.bench.forEach((player, index) => {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="fc-card ${player.rarity}" onclick="app.selectBenchPlayer(${index})">
+                            <div class="card-actions">
+                                <button class="action-trash" onclick="event.stopPropagation(); app.removePlayerFromBench(${index})">×</button>
+                            </div>
+                            <div class="card-top">
+                                <div class="card-meta"><span>${player.rating}</span><span class="card-pos">${player.pos}</span></div>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-name">${player.name}</div>
+                                <div class="card-stats-row"><span>${player.pac} PAC</span><span>${player.def} DEF</span></div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            selectPitchSlot(slotKey) {
+                this.selectedPitchPos = (this.selectedPitchPos === slotKey) ? null : slotKey;
+                this.renderPitch();
+            }
+
+            selectBenchPlayer(benchIndex) {
+                if (!this.selectedPitchPos) {
+                    alert("Lütfen önce sahada yerini değiştirmek istediğiniz bir pozisyona (slota) tıklayın!");
+                    return;
+                }
+
+                const benchPlayer = this.state.bench[benchIndex];
+                let requiredPos = this.selectedPitchPos;
+
+                // CB1 ve CB2 slotlarını "CB" mevkisi olarak eşitliyoruz
+                if (requiredPos === "CB1" || requiredPos === "CB2") {
+                    requiredPos = "CB";
+                }
+
+                // Pozisyona uymayan oyuncuların sahaya alınmasını engelleme filtresi
+                if (benchPlayer.pos !== requiredPos) {
+                    alert(`Pozisyon Hatası: Seçtiğiniz oyuncunun pozisyonu (${benchPlayer.pos}), sahadaki mevkiyle (${requiredPos}) uyuşmuyor!`);
+                    this.selectedPitchPos = null;
+                    this.renderPitch();
+                    return;
+                }
+
+                const pitchPlayer = this.state.squad[this.selectedPitchPos];
+
+                this.state.squad[this.selectedPitchPos] = benchPlayer;
+                this.state.bench[benchIndex] = pitchPlayer;
+
+                this.selectedPitchPos = null;
+                this.save();
+                this.renderAll();
+            }
+
+            removePlayerFromBench(index) {
+                this.state.bench.splice(index, 1);
+                this.save();
+                this.renderBench();
+            }
+
+            calculateMetrics() {
+                let total = 0, att = 0, mid = 0, def = 0;
+                let s = this.state.squad;
+
+                const r = (obj) => obj ? obj.rating : 0;
+
+                total = r(s.ST)+r(s.LW)+r(s.RW)+r(s.CAM)+r(s.CM)+r(s.CDM)+r(s.LB)+r(s.CB1)+r(s.CB2)+r(s.RB)+r(s.GK);
+                att = (r(s.ST) + r(s.LW) + r(s.RW)) / 3;
+                mid = (r(s.CAM) + r(s.CM) + r(s.CDM)) / 3;
+                def = (r(s.LB) + r(s.CB1) + r(s.CB2) + r(s.RB) + r(s.GK)) / 5;
+
+                document.getElementById('stat-ovr').innerText = Math.round(total / 11);
+                document.getElementById('stat-att').innerText = Math.round(att);
+                document.getElementById('stat-mid').innerText = Math.round(mid);
+                document.getElementById('stat-def').innerText = Math.round(def);
+            }
+
+            openNormalPack() {
+                this.state.nextPackTime = Date.now() + 10 * 60 * 1000;
+                
+                const rng = Math.random() * 100;
+                let pool = [];
+
+                if(rng < 60) pool = RAW_FC26_DATABASE.filter(p => p.rating >= 70 && p.rating <= 77);
+                else if(rng < 90) pool = RAW_FC26_DATABASE.filter(p => p.rating >= 80 && p.rating <= 85);
+                else pool = RAW_FC26_DATABASE.filter(p => p.rating >= 90 && p.rating <= 99);
+
+                if(pool.length === 0) pool = RAW_FC26_DATABASE;
+
+                const rolled = pool[Math.floor(Math.random() * pool.length)];
+                
+                this.activePackPlayer = rolled;
+                document.getElementById('showcase-front').innerHTML = `
+                    <div class="fc-card ${rolled.rarity}" style="width:100%; height:100%;">
+                        <div class="card-top">
+                            <div class="card-meta"><span>${rolled.rating}</span><span class="card-pos">${rolled.pos}</span></div>
+                        </div>
+                        <div class="card-info" style="margin-top:70px;">
+                            <div class="card-name" style="font-size:14px;">${rolled.name}</div>
+                            <p style="font-size:10px; color:var(--neon-blue); margin-top:5px;">${rolled.club}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('showcase-card-inner').classList.remove('flipped');
+                document.getElementById('btn-collect').style.display = "none";
+                this.openModal('modal-pack-opening');
+                this.save();
+            }
+
+            flipCard() {
+                document.getElementById('showcase-card-inner').classList.add('flipped');
+                document.getElementById('btn-collect').style.display = "block";
+            }
+
+            collectPackToBench() {
+                if (this.activePackPlayer) {
+                    this.state.bench.push(this.activePackPlayer);
+                    this.activePackPlayer = null;
+                    this.save();
+                }
+                this.closeModal('modal-pack-opening');
+                this.navigateTo('screen-draft');
+            }
+
+            updateTimer() {
+                const diff = this.state.nextPackTime - Date.now();
+                const btn = document.getElementById('btn-open');
+                if(!btn) return;
+
+                if(diff <= 0) {
+                    document.getElementById('pack-timer').innerText = "HAZIR";
+                    btn.disabled = false;
+                } else {
+                    const m = Math.floor(diff / 60000);
+                    const s = Math.floor((diff % 60000) / 1000);
+                    document.getElementById('pack-timer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                    btn.disabled = true;
+                }
+            }
+
+            openModal(id) { document.getElementById(id).style.display = "flex"; }
+            closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+            verifyPassword() {
+                const p = document.getElementById('f4-pass').value;
+                if(btoa(p) === "bmFzcmV0bnVzcmV0") {
+                    this.closeModal('modal-f4-login');
+                    this.openModal('modal-f4-panel');
+                } else {
+                    document.getElementById('f4-err').innerText = "Hatalı Terminal Şifresi!";
+                }
+            }
+
+            devResetCooldown() { this.state.nextPackTime = 0; this.save(); this.closeModal('modal-f4-panel'); }
+            devAddElitePlayer() {
+                const elites = RAW_FC26_DATABASE.filter(p => p.rating >= 90);
+                const p = elites[Math.floor(Math.random() * elites.length)];
+                this.state.bench.push(p);
+                this.save();
+                this.closeModal('modal-f4-panel');
+                this.renderAll();
+            }
+        }
+        const app = new FC26Engine();
+    </script>
+</body>
+</html>
