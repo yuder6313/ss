@@ -11,6 +11,7 @@
             --neon-blue: #00f0ff;
             --neon-gold: #ffb700;
             --neon-magenta: #ff0055;
+            --neon-purple: #9d4edd;
             --text-light: #f1f2f6;
             --glass-border: rgba(255, 255, 255, 0.05);
             --font-family: 'Segoe UI', Arial, sans-serif;
@@ -30,6 +31,8 @@
         .neon-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 12px var(--neon-blue); }
         .neon-btn.gold { border-color: var(--neon-gold); }
         .neon-btn.gold:hover { background: var(--neon-gold); color: #000; box-shadow: 0 0 12px var(--neon-gold); }
+        .neon-btn.purple { border-color: var(--neon-purple); color: #fff; }
+        .neon-btn.purple:hover { background: var(--neon-purple); box-shadow: 0 0 12px var(--neon-purple); }
         .neon-btn.danger { border-color: var(--neon-magenta); color: var(--neon-magenta); }
         .neon-btn.danger:hover { background: var(--neon-magenta); color: #fff; }
 
@@ -64,13 +67,15 @@
         .stat-box span:last-child { font-weight: 700; color: var(--neon-blue); }
 
         .bench-section { margin-top: 25px; }
-        .bench-title { font-size: 16px; text-transform: uppercase; margin-bottom: 10px; color: var(--neon-gold); letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .bench-title { font-size: 16px; text-transform: uppercase; margin-bottom: 10px; color: var(--neon-gold); letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
         .bench-grid { display: flex; gap: 12px; overflow-x: auto; padding: 10px 5px; background: rgba(0,0,0,0.3); border-radius: 8px; min-height: 160px; border: 1px dashed rgba(255,255,255,0.05); }
 
+        .packs-page-layout { display: flex; flex-direction: column; gap: 30px; }
         .packs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; max-width: 800px; margin: 0 auto; width: 100%; }
         .pack-card { display: flex; flex-direction: column; align-items: center; padding: 30px; text-align: center; }
         .pack-art { width: 130px; height: 180px; background: linear-gradient(135deg, #1b222e, #090c12); border-radius: 8px; border: 2px solid var(--neon-blue); margin: 15px 0; }
         .pack-art.gold-theme { border-color: var(--neon-gold); }
+        .pack-art.contract-theme { border-color: var(--neon-purple); background: linear-gradient(135deg, #24143a, #0c0517); }
         .pack-timer { font-size: 20px; font-weight: 700; color: var(--neon-blue); margin-bottom: 15px; }
         
         .modern-input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 4px; color: white; text-align: center; font-weight: 600; }
@@ -128,6 +133,7 @@
             <div class="bench-section glass-panel">
                 <div class="bench-title">
                     <span>Yedek Kulübesi & Havuz (<span id="bench-count">0</span> Oyuncu)</span>
+                    <button class="neon-btn purple" style="font-size: 11px; padding: 5px 10px;" onclick="app.processContractSynthesis()">3 Aynı OVR Sözleşme Yap (N+5)</button>
                 </div>
                 <div class="bench-grid" id="bench-container"></div>
             </div>
@@ -136,20 +142,31 @@
         <!-- PAKETLER -->
         <div id="screen-packs" class="screen">
             <button class="neon-btn back-btn" onclick="app.navigateTo('screen-menu')">Ana Menü</button>
-            <div class="packs-container">
-                <div class="pack-card glass-panel">
-                    <h2>STANDART PAKET</h2>
-                    <p style="color:#788296; font-size:12px; margin-top:4px;">%60 (70-77) | %30 (80-85) | %10 (90-99)</p>
-                    <div class="pack-art gold-theme"></div>
-                    <div class="pack-timer" id="pack-timer">HAZIR</div>
-                    <button class="neon-btn" id="btn-open" onclick="app.openNormalPack()">Paketi Satın Al</button>
+            
+            <div class="packs-page-layout">
+                <div class="packs-container">
+                    <div class="pack-card glass-panel">
+                        <h2>STANDART PAKET</h2>
+                        <p style="color:#788296; font-size:12px; margin-top:4px;">%60 (70-77) | %30 (80-85) | %10 (90-99)</p>
+                        <div class="pack-art gold-theme"></div>
+                        <div class="pack-timer" id="pack-timer">HAZIR</div>
+                        <button class="neon-btn" id="btn-open" onclick="app.openNormalPack()">Paketi Satın Al</button>
+                    </div>
+
+                    <div class="pack-card glass-panel">
+                        <h2>VIP GELİŞTİRİCİ GİRİŞİ</h2>
+                        <p style="color:#788296; font-size:12px; margin-top:4px;">F4 Kod Paneli Yönetimi</p>
+                        <div class="pack-art" style="border-color:var(--neon-magenta)"></div>
+                        <button class="neon-btn gold" onclick="app.openModal('modal-f4-login')">Terminali Aç (F4)</button>
+                    </div>
                 </div>
 
-                <div class="pack-card glass-panel">
-                    <h2>VIP GELİŞTİRİCİ GİRİŞİ</h2>
-                    <p style="color:#788296; font-size:12px; margin-top:4px;">F4 Kod Paneli Yönetimi</p>
-                    <div class="pack-art" style="border-color:var(--neon-magenta)"></div>
-                    <button class="neon-btn gold" onclick="app.openModal('modal-f4-login')">Terminali Aç (F4)</button>
+                <!-- SÖZLEŞMELİ OYUNCU PAKETLERİ LİSTESİ -->
+                <div class="glass-panel" style="max-width: 800px; margin: 0 auto; width: 100%;">
+                    <h3 style="color: var(--neon-purple); margin-bottom: 15px; letter-spacing: 1px;">SÖZLEŞMELİ OYUNCU PAKETLERİ</h3>
+                    <div id="contract-packs-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px;">
+                        <!-- Dinamik paketler buraya gelecek -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,6 +216,7 @@
                 this.state = {
                     squad: { ST: null, LW: null, RW: null, CAM: null, CM: null, CDM: null, LB: null, CB1: null, CB2: null, RB: null, GK: null },
                     bench: [],
+                    contractPacks: [], // Sözleşmeli oyuncu paketleri (OVR listesi)
                     nextPackTime: 0
                 };
                 this.selectedPitchPos = null;
@@ -217,7 +235,12 @@
 
             load() {
                 const saved = localStorage.getItem(this.storageKey);
-                if (saved) { try { this.state = JSON.parse(saved); } catch(e) {} }
+                if (saved) { 
+                    try { 
+                        this.state = JSON.parse(saved); 
+                        if (!this.state.contractPacks) this.state.contractPacks = [];
+                    } catch(e) {} 
+                }
             }
 
             save() { localStorage.setItem(this.storageKey, JSON.stringify(this.state)); }
@@ -261,6 +284,7 @@
             renderAll() {
                 this.renderPitch();
                 this.renderBench();
+                this.renderContractPacks();
                 this.calculateMetrics();
             }
 
@@ -319,6 +343,28 @@
                 });
             }
 
+            renderContractPacks() {
+                const container = document.getElementById('contract-packs-list');
+                if(!container) return;
+                container.innerHTML = "";
+
+                if(this.state.contractPacks.length === 0) {
+                    container.innerHTML = `<p style="color: #788296; font-size: 13px; grid-column: 1/-1;">Henüz oluşturulmuş sözleşmeli paket bulunmuyor.</p>`;
+                    return;
+                }
+
+                this.state.contractPacks.forEach((targetOvr, index) => {
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="pack-card glass-panel" style="padding: 15px; border-color: var(--neon-purple);">
+                            <h4 style="font-size: 14px; color: #fff;">${targetOvr} OVR PAKETİ</h4>
+                            <p style="color: var(--neon-purple); font-size: 11px; margin: 2px 0 8px 0;">Net ${targetOvr} Reyting Oyuncu</p>
+                            <div class="pack-art contract-theme" style="width: 75px; height: 105px; margin: 5px 0;"></div>
+                            <button class="neon-btn purple" style="font-size: 12px; padding: 6px 12px; margin-top: 5px; width: 100%;" onclick="app.openContractPack(${index})">AÇ</button>
+                        </div>
+                    `);
+                });
+            }
+
             selectPitchSlot(slotKey) {
                 this.selectedPitchPos = (this.selectedPitchPos === slotKey) ? null : slotKey;
                 this.renderPitch();
@@ -333,12 +379,10 @@
                 const benchPlayer = this.state.bench[benchIndex];
                 let requiredPos = this.selectedPitchPos;
 
-                // CB1 ve CB2 slotlarını "CB" mevkisi olarak eşitliyoruz
                 if (requiredPos === "CB1" || requiredPos === "CB2") {
                     requiredPos = "CB";
                 }
 
-                // Pozisyona uymayan oyuncuların sahaya alınmasını engelleme filtresi
                 if (benchPlayer.pos !== requiredPos) {
                     alert(`Pozisyon Hatası: Seçtiğiniz oyuncunun pozisyonu (${benchPlayer.pos}), sahadaki mevkiyle (${requiredPos}) uyuşmuyor!`);
                     this.selectedPitchPos = null;
@@ -354,6 +398,87 @@
                 this.selectedPitchPos = null;
                 this.save();
                 this.renderAll();
+            }
+
+            processContractSynthesis() {
+                if (this.state.bench.length < 3) {
+                    alert("Sözleşme oluşturabilmek için yedeklerde en az 3 oyuncu olmalıdır!");
+                    return;
+                }
+
+                // Reyting sayımı yap
+                let counts = {};
+                this.state.bench.forEach(p => {
+                    counts[p.rating] = (counts[p.rating] || 0) + 1;
+                });
+
+                // Aynı OVR'den 3 tane olan ilk reytingi bul
+                let validRating = null;
+                for (let ovr in counts) {
+                    if (counts[ovr] >= 3) {
+                        validRating = parseInt(ovr);
+                        break;
+                    }
+                }
+
+                if (!validRating) {
+                    alert("Sözleşme Hatası: Yedek kulübesinde aynı OVR (reyting) değerine sahip 3 oyuncu bulunamadı!");
+                    return;
+                }
+
+                // Bulunan reytingdeki 3 oyuncuyu yedeklerden sil
+                let removedCount = 0;
+                this.state.bench = this.state.bench.filter(p => {
+                    if (p.rating === validRating && removedCount < 3) {
+                        removedCount++;
+                        return false;
+                    }
+                    return true;
+                });
+
+                // N + 5 kuralına göre tam hedef paketi ekle
+                let targetOvr = validRating + 5;
+                this.state.contractPacks.push(targetOvr);
+                
+                this.save();
+                this.renderAll();
+                alert(`Başarılı! 3 adet ${validRating} OVR oyuncu birleştirildi. Sözleşmeli oyuncu listesine "${targetOvr} OVR PAKETİ" eklendi.`);
+            }
+
+            openContractPack(index) {
+                const targetOvr = this.state.contractPacks[index];
+                
+                // Veritabanından tam olarak o OVR değerine sahip oyuncuları filtrele
+                let pool = RAW_FC26_DATABASE.filter(p => p.rating === targetOvr);
+
+                if (pool.length === 0) {
+                    alert(`Veritabanında tam olarak ${targetOvr} OVR değerine sahip oyuncu bulunamadı! Yakın bir oyuncu aranıyor...`);
+                    pool = RAW_FC26_DATABASE.filter(p => Math.abs(p.rating - targetOvr) <= 2);
+                    if (pool.length === 0) pool = RAW_FC26_DATABASE;
+                }
+
+                const rolled = pool[Math.floor(Math.random() * pool.length)];
+                
+                // Paketi listeden kaldır
+                this.state.contractPacks.splice(index, 1);
+                
+                this.activePackPlayer = rolled;
+                document.getElementById('showcase-front').innerHTML = `
+                    <div class="fc-card ${rolled.rarity}" style="width:100%; height:100%;">
+                        <div class="card-top">
+                            <div class="card-meta"><span>${rolled.rating}</span><span class="card-pos">${rolled.pos}</span></div>
+                        </div>
+                        <div class="card-info" style="margin-top:70px;">
+                            <div class="card-name" style="font-size:14px;">${rolled.name}</div>
+                            <p style="font-size:10px; color:var(--neon-purple); margin-top:5px;">${rolled.club}</p>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('showcase-card-inner').classList.remove('flipped');
+                document.getElementById('btn-collect').style.display = "none";
+                this.openModal('modal-pack-opening');
+                this.save();
             }
 
             removePlayerFromBench(index) {
